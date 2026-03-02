@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">CybExplore Monitor Dashboard</h2>
+    <p class="text-muted">Real-time activity overview (last 20 actions)</p>
+
+    <h4>Recent Logins</h4>
+    {% if recent_logins %}
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for login in recent_logins %}
+                    <tr>
+                        <td>{{ login.username }}</td>
+                        <td>{{ login.time }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No recent logins.</p>
+    {% endif %}
+
+    <h4>Recent Profile Changes</h4>
+    {% if recent_profile_changes %}
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for change in recent_profile_changes %}
+                    <tr>
+                        <td>{{ change.username }}</td>
+                        <td>{{ change.time }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No recent changes.</p>
+    {% endif %}
+
+    <p class="mt-4">
+        <a href="{{ url_for('monitor.monitor_logout') }}" class="btn btn-outline-danger">Logout Monitor</a>
+    </p>
+</div>
+{% endblock %}

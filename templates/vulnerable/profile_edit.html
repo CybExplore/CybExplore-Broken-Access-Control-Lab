@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile – CybExplore Lab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <h2>Edit Profile</h2>
+        <form method="POST">
+            <!-- Hidden field – IDOR / Mass Assignment VULN -->
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+
+            <div class="mb-3">
+                <label>Phone</label>
+                <input type="text" name="phone" value="{{ user.phone or '' }}" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Hostel</label>
+                <input type="text" name="hostel" value="{{ user.hostel or '' }}" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Bio</label>
+                <textarea name="bio" class="form-control" rows="4">{{ user.bio or '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label>Role (tamper this for escalation)</label>
+                <input type="text" name="role" value="{{ user.role }}" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

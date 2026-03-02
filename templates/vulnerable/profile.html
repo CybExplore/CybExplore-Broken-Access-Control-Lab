@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Profile – {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+<div class="card shadow mt-4">
+    <div class="card-header bg-primary text-white">
+        <h4>Profile: {{ profile_user.username }}</h4>
+    </div>
+    <div class="card-body">
+        <p><strong>Email:</strong> {{ profile_user.email or 'Not set' }}</p>
+        <p><strong>Phone:</strong> {{ profile_user.phone or 'Not set' }}</p>
+        <p><strong>Hostel:</strong> {{ profile_user.hostel or 'Not set' }}</p>
+        <p><strong>Bio:</strong> {{ profile_user.bio or 'No bio' }}</p>
+        <p><strong>Role:</strong> {{ profile_user.role }}</p>
+
+        {% if is_own_profile %}
+            <a href="{{ url_for('vuln.edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

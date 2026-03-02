@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Monitor Dashboard – CybExplore Private View{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0 text-danger">Monitor Dashboard</h2>
+            <small class="text-muted">Real-time activity – Auto-refresh every 10s</small>
+        </div>
+        <a href="{{ url_for('monitor.monitor_logout') }}" class="btn btn-outline-danger">
+            End Session
+        </a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h5>Total Logins</h5>
+                    <p class="display-6 fw-bold text-primary">{{ total_logins }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h5>Exploits Detected</h5>
+                    <p class="display-6 fw-bold text-danger">{{ exploit_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="new-activity-alert" class="alert alert-info d-none">
+        ⚡ New activity detected!
+    </div>
+
+    <!-- Activity Log Table -->
+    <div class="card shadow">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between">
+            <h5 class="mb-0">Recent Activity Log</h5>
+            <button id="manual-refresh" class="btn btn-sm btn-light">
+                Refresh
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>Details</th>
+                            <th>IP</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-body">
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                Loading activity...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let lastLogId = 0;
+
+function refreshLogs(silent = false) {
+    fetch('/monitor/logs-json')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('activity-body');
+            tbody.innerHTML = '';
+
+            if (!data.logs || data.logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            No activity yet
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const newLogs = data.logs.filter(log => log.id > lastLogId);
+            if (newLogs.length > 0 && !silent) {
+                const alertEl = document.getElementById('new-activity-alert');
+                alertEl.classList.remove('d-none');
+                setTimeout(() => alertEl.classList.add('d-none'), 4000);
+            }
+
+            lastLogId = Math.max(...data.logs.map(log => log.id));
+
+            data.logs.forEach(log => {
+                const username = log.username || "Anonymous";
+
+                // Highlight suspicious activity
+                const isExploit = log.details &&
+                    (log.details.toLowerCase().includes("idor") ||
+                     log.details.toLowerCase().includes("mass assignment"));
+
+                const row = document.createElement('tr');
+                if (isExploit) row.classList.add("table-danger");
+
+                const targetId = log.target_id || "";
+                const messageBtn = targetId ? `
+                    <button class="btn btn-sm btn-outline-primary message-btn"
+                            data-user-id="${targetId}"
+                            data-username="${username}">
+                        Message
+                    </button>
+                ` : `
+                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                        No User
+                    </button>
+                `;
+
+                row.innerHTML = `
+                    <td>${log.timestamp}</td>
+                    <td>${username}</td>
+                    <td>${log.action_type}</td>
+                    <td>${log.target_id || "—"}</td>
+                    <td>${log.details || "—"}</td>
+                    <td>${log.ip_address || "—"}</td>
+                    <td>${messageBtn}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(() => {
+            document.getElementById('activity-body').innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-danger py-4">
+                        Failed to load logs
+                    </td>
+                </tr>
+            `;
+        });
+}
+
+// Event delegation for message buttons
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.message-btn');
+    if (!btn) return;
+
+    const userId = btn.getAttribute('data-user-id');
+    const username = btn.getAttribute('data-username');
+    if (!userId) return alert('Cannot send message: No user selected.');
+
+    const message = prompt(`Send message to ${username}:`);
+    if (!message || !message.trim()) return;
+
+    fetch('/monitor/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, message: message.trim() })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Message sent to ${username}!`);
+        } else {
+            alert(`Failed: ${data.error || 'Unknown error'}`);
+        }
+    })
+    .catch(err => {
+        alert(`Failed to send message: ${err}`);
+    });
+});
+
+refreshLogs(true);
+setInterval(() => refreshLogs(), 10000);
+
+document.getElementById('manual-refresh')
+    .addEventListener('click', () => refreshLogs());
+</script>
+{% endblock %}

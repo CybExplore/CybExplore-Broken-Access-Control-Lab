@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Home – Listings Overview</h2>
+<p>Vulnerable to various A01 attacks – explore!</p>
+
+{% if listings %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>Owner</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in listings %}
+                <tr>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.price }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.owner }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No listings yet.</p>
+{% endif %}
+{% endblock %}

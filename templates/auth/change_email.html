@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Change Email – CybExplore Lab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow border-primary">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Change Email Address</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Current email: <strong>{{ current_email or 'Not set' }}</strong>
+                </p>
+
+                <form method="POST">
+                    <!-- Hidden field – MASS ASSIGNMENT / IDOR VULNERABILITY -->
+                    <input type="hidden" name="user_id" value="{{ current_user.id }}">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">New Email Address</label>
+                        <input type="email" name="new_email" class="form-control form-control-lg" required autofocus placeholder="newemail@example.com">
+                        <small class="form-text text-muted">
+                            This field is vulnerable – try changing the user_id in dev tools...
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        Update Email
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <small>
+                        <a href="{{ url_for('home') }}" class="text-muted">Back to Home</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+</div>
+{% endblock %}

@@ -73,6 +73,19 @@ class Config:
     # Debug / Development settings
     DEBUG = os.getenv("FLASK_DEBUG", "True").lower() == "true"
 
+    # Flask-Mail (local XAMPP Mercury by default)
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "localhost")
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 25))
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "False").lower() == "true"
+    MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False").lower() == "true"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME", None)
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", None)
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "no-reply@cybexplore.local")
+
+    # Debug mode: print to console instead of sending real email
+    MAIL_DEBUG_ONLY = os.getenv("MAIL_DEBUG_ONLY", "True").lower() == "true"
+
+
 
 # Optional: Development-specific overrides (when DEBUG=True)
 class DevelopmentConfig(Config):

@@ -75,7 +75,7 @@
                 <!-- Actions -->
                 <div class="d-flex gap-2 mt-4">
                     {% if current_user.is_authenticated %}
-                        <form method="POST" action="{{ url_for('add_favorite') }}">
+                        <form method="POST" action="{{ url_for('vuln.add_favorite') }}">
                             <input type="hidden" name="listing_id" value="{{ item.id }}">
                             <button type="submit" class="btn btn-outline-primary">
                                 <i class="bi bi-heart"></i> Add to Favorites

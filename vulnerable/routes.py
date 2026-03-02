@@ -10,7 +10,7 @@ vuln_bp = Blueprint('vuln', __name__)
 # ────────────────────────────────────────────────
 # HOME / LISTINGS OVERVIEW
 # ────────────────────────────────────────────────
-@vuln_bp.route("/")
+@vuln_bp.route("/vulnerable")
 @login_required
 def home():
     conn = get_db_connection()
@@ -505,4 +505,51 @@ def remove_favorite():
 
     return redirect(request.referrer or url_for("vuln.home"))
 
+@vuln_bp.route("/favorites", methods=["GET"])
+@login_required
+def favorites():
+    requested_user_id = request.args.get("user_id", str(current_user.id))
+
+    conn = get_db_connection()
+    try:
+        cursor = get_cursor(conn)
+
+        # 🚨 Broken Access Control detection
+        if str(requested_user_id) != str(current_user.id):
+            log_monitor_action(
+                user_id=current_user.id,
+                username=current_user.username,
+                action_type="favorites_view_bac",
+                target_id=requested_user_id,
+                details=f"Attempted to view favorites of user {requested_user_id}",
+                ip_address=request.remote_addr
+            )
+
+            flash("Unauthorized favorites access attempt logged!", "warning")
+            return redirect(url_for("vuln.home"))
+
+        # Normal favorites retrieval
+        cursor.execute("""
+            SELECT l.id, l.title, l.price, l.user_id
+            FROM favorites f
+            JOIN listings l ON f.listing_id = l.id
+            WHERE f.user_id = %s
+        """, (current_user.id,))
+        
+        favorites = cursor.fetchall()
+
+        # # Log normal view
+        # log_monitor_action(
+        #     user_id=current_user.id,
+        #     username=current_user.username,
+        #     action_type="favorites_view",
+        #     target_id=current_user.id,
+        #     details="Viewed own favorites",
+        #     ip_address=request.remote_addr
+        # )
+
+        return render_template("vulnerable/favorites.html", favorites=favorites)
+
+    finally:
+        conn.close()
 

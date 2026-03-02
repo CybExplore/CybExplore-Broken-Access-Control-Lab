@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-pencil-square me-2"></i>
+                Edit Listing (Vulnerable Mode)
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            <div class="alert alert-warning">
+                <strong>Lab Mode:</strong> This page does not verify ownership properly.
+            </div>
+
+            <form method="POST" action="{{ url_for('vuln.edit_listing', listing_id=listing.id) }}">
+
+                <!-- Listing ID (visible for easy IDOR testing) -->
+                <div class="mb-3">
+                    <label class="form-label">Listing ID</label>
+                    <input type="text" class="form-control" value="{{ listing.id }}" readonly>
+                </div>
+
+                <!-- Hidden Owner ID (BAC target) -->
+                <input type="hidden" name="user_id" value="{{ listing.user_id }}">
+
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-control"
+                           value="{{ listing.title }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Price</label>
+                    <input type="number" name="price" class="form-control"
+                           value="{{ listing.price }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="4">
+{{ listing.description }}
+                    </textarea>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-save me-1"></i>
+                        Update Listing
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

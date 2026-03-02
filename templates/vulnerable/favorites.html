@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-heart-fill text-danger me-2"></i>
+                My Favorites
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            {% if favorites %}
+                <div class="row">
+                    {% for listing in favorites %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body">
+
+                                    <h5 class="card-title">
+                                        {{ listing.title }}
+                                    </h5>
+
+                                    <p class="card-text">
+                                        <strong>Price:</strong> ${{ listing.price }} <br>
+                                        <small class="text-muted">
+                                            Owner ID: {{ listing.user_id }}
+                                        </small>
+                                    </p>
+
+                                    <!-- Remove Favorite -->
+                                    <form method="POST" action="{{ url_for('vuln.remove_favorite') }}">
+                                        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                                        
+                                        <!-- Hidden user_id (for BAC lab tampering) -->
+                                        <input type="hidden" name="user_id" value="{{ current_user.id }}">
+
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                            <i class="bi bi-trash me-1"></i>
+                                            Remove
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-heart display-5"></i>
+                    <p class="mt-3">You have no favorites yet.</p>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

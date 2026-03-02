@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, jsonify
 from flask_login import LoginManager, login_required, current_user
 from config import Config
-from db import get_db_connection
+from db import get_db_connection, get_cursor
 from models import User
 from utils import get_unread_messages
 from flask_mail import Mail
@@ -52,7 +52,30 @@ def inject_current_year():
 
 @app.route("/")
 def home():
-    return render_template("home.html")
+    conn = get_db_connection()
+    if not conn:
+        flash("Database connection failed!", "danger")
+        return render_template("vulnerable/home.html", listings=[])
+
+    try:
+        cursor = get_cursor(conn)
+        cursor.execute("""
+            SELECT l.id, l.title, l.price, l.category, l.status, 
+                   u.username AS owner, u.id AS owner_id
+            FROM listings l
+            JOIN users u ON l.user_id = u.id
+            WHERE l.status = 'available'
+            ORDER BY l.created_at DESC
+            LIMIT 30
+        """)
+        listings = cursor.fetchall() or []
+    except Exception as e:
+        flash(f"Error loading listings: {str(e)}", "danger")
+        listings = []
+    finally:
+        conn.close()
+
+    return render_template("home.html", listings=listings)
 
 
 # Return unread messages for current user

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.title }} – CybExplore BAC Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ item.title }}</h4>
+                <span class="badge bg-light text-dark">₦{{ item.price|round(0) }}</span>
+            </div>
+
+            <div class="card-body">
+                <!-- Photos / Previews -->
+                <div class="row mb-4">
+                    {% if item.photo %}
+                        <div class="col-md-6">
+                            <h6>Uploaded Photo</h6>
+                            <img src="{{ url_for('static', filename='uploads/' + item.photo) }}" 
+                                 alt="{{ item.title }}" 
+                                 class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 400px; object-fit: contain;">
+                        </div>
+                    {% endif %}
+
+                    {% if item.preview_url %}
+                        <div class="col-md-6">
+                            <h6>External Preview (fetched from URL)</h6>
+                            <img src="{{ item.preview_url }}" 
+                                 alt="External preview" 
+                                 class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 400px; object-fit: contain;"
+                                 onerror="this.src='https://via.placeholder.com/400x300?text=Preview+Failed'; this.alt='Failed to load external preview';">
+                            <small class="text-muted d-block mt-2">
+                                Fetched from: <a href="{{ item.preview_url }}" target="_blank" class="text-muted">{{ item.preview_url }}</a>
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Details -->
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <strong>Price:</strong> ₦{{ item.price|round(2) }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Category:</strong> {{ item.category|capitalize }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Status:</strong> 
+                        <span class="badge bg-{% if item.status == 'available' %}success{% elif item.status == 'sold' %}danger{% else %}warning{% endif %}">
+                            {{ item.status|capitalize }}
+                        </span>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h5>Description</h5>
+                <p class="text-muted">
+                    {{ item.description or "No description provided." }}
+                </p>
+
+                <hr class="my-4">
+
+                <h5>Seller Information</h5>
+                <p>
+                    <strong>Posted by:</strong> {{ item.owner }}<br>
+                    {% if item.phone or item.hostel %}
+                        <strong>Contact:</strong> {{ item.phone or '—' }} • {{ item.hostel or '—' }}
+                    {% endif %}
+                </p>
+
+                <!-- Actions -->
+                <div class="d-flex gap-2 mt-4">
+                    {% if current_user.is_authenticated %}
+                        <form method="POST" action="{{ url_for('add_favorite') }}">
+                            <input type="hidden" name="listing_id" value="{{ item.id }}">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-heart"></i> Add to Favorites
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if current_user.id == item.owner_id %}
+                        <a href="{{ url_for('vuln.edit_listing', listing_id=item.id) }}" 
+                           class="btn btn-outline-warning">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+
+                        <form method="POST" action="{{ url_for('vuln.delete_listing', listing_id=item.id) }}" 
+                              style="display:inline;" 
+                              onsubmit="return confirm('Delete this listing?');">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-footer text-muted text-center small">
+                Listing ID: {{ item.id[:8] }}… (vulnerable to tampering)
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="{{ url_for('vuln.home') }}" class="btn btn-outline-secondary">
+                ← Back to All Listings
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

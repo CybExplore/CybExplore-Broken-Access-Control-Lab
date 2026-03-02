@@ -380,3 +380,129 @@ def admin():
         return redirect(url_for("vuln.home"))
     finally:
         conn.close()
+
+
+@vuln_bp.route("/favorites/add", methods=["POST"])
+@login_required
+def add_favorite():
+    listing_id = request.form.get("listing_id")
+    target_user_id = request.form.get("user_id", current_user.id)  # optional hidden field for IDOR demo
+
+    if not listing_id:
+        flash("No listing selected", "danger")
+        return redirect(request.referrer or url_for("vuln.home"))
+
+    conn = get_db_connection()
+    try:
+        cursor = get_cursor(conn)
+
+        # Fetch listing info (owner/status) for logging
+        cursor.execute("SELECT user_id, status FROM listings WHERE id = %s", (listing_id,))
+        listing = cursor.fetchone()
+        if not listing:
+            flash("Listing not found", "danger")
+            return redirect(request.referrer or url_for("vuln.home"))
+
+        # Check for Broken Access Control: user_id in request != current user
+        if str(target_user_id) != str(current_user.id):
+            # Log the cross-user attempt
+            log_monitor_action(
+                user_id=current_user.id,
+                username=current_user.username,
+                action_type="favorite_add_bac",
+                target_id=listing_id,
+                details=f"Attempted to add listing {listing_id} to favorites as user {target_user_id} (owner: {listing['user_id']})",
+                ip_address=request.remote_addr
+            )
+            flash("Cannot add favorite for another user! (Logged)", "warning")
+            return redirect(request.referrer or url_for("vuln.home"))
+
+        # Normal add favorite
+        cursor.execute("""
+            INSERT IGNORE INTO favorites (user_id, listing_id)
+            VALUES (%s, %s)
+        """, (current_user.id, listing_id))
+        conn.commit()
+
+        # # Log successful addition
+        # log_monitor_action(
+        #     user_id=current_user.id,
+        #     username=current_user.username,
+        #     action_type="favorite_add",
+        #     target_id=listing_id,
+        #     details=f"Added listing {listing_id} to favorites (owner: {listing['user_id']})",
+        #     ip_address=request.remote_addr
+        # )
+
+        flash("Added to favorites!", "success")
+
+    except Exception as e:
+        flash(f"Error adding to favorites: {str(e)}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(request.referrer or url_for("vuln.home"))
+
+
+@vuln_bp.route("/favorites/remove", methods=["POST"])
+@login_required
+def remove_favorite():
+    listing_id = request.form.get("listing_id")
+    target_user_id = request.form.get("user_id", current_user.id)  # optional hidden field for IDOR demo
+
+    if not listing_id:
+        flash("No listing selected", "danger")
+        return redirect(request.referrer or url_for("vuln.home"))
+
+    conn = get_db_connection()
+    try:
+        cursor = get_cursor(conn)
+
+        # Fetch listing info (owner/status) for logging
+        cursor.execute("SELECT user_id, status FROM listings WHERE id = %s", (listing_id,))
+        listing = cursor.fetchone()
+        if not listing:
+            flash("Listing not found", "danger")
+            return redirect(request.referrer or url_for("vuln.home"))
+
+        # Check for Broken Access Control: user_id in request != current user
+        if str(target_user_id) != str(current_user.id):
+            # Log the cross-user attempt
+            log_monitor_action(
+                user_id=current_user.id,
+                username=current_user.username,
+                action_type="favorite_remove_bac",
+                target_id=listing_id,
+                details=f"Attempted to remove listing {listing_id} from favorites as user {target_user_id} (owner: {listing['user_id']})",
+                ip_address=request.remote_addr
+            )
+            flash("Cannot remove favorite for another user! (Logged)", "warning")
+            return redirect(request.referrer or url_for("vuln.home"))
+
+        # Normal remove favorite
+        cursor.execute("""
+            DELETE FROM favorites
+            WHERE user_id = %s AND listing_id = %s
+        """, (current_user.id, listing_id))
+        conn.commit()
+
+        # # Log successful removal
+        # log_monitor_action(
+        #     user_id=current_user.id,
+        #     username=current_user.username,
+        #     action_type="favorite_remove",
+        #     target_id=listing_id,
+        #     details=f"Removed listing {listing_id} from favorites (owner: {listing['user_id']})",
+        #     ip_address=request.remote_addr
+        # )
+
+        flash("Removed from favorites!", "success")
+
+    except Exception as e:
+        flash(f"Error removing from favorites: {str(e)}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(request.referrer or url_for("vuln.home"))
+
+

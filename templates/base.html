@@ -41,7 +41,8 @@
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto align-items-center">
 
-                {% if session.get('is_monitor') %}
+                {% if current_user.is_authenticated and current_user.username == 'cybadmin' %}
+                    <!-- Only monitor sees this -->
                     <li class="nav-item">
                         <span class="nav-link text-warning">Monitor Mode</span>
                     </li>
@@ -52,9 +53,9 @@
                     </li>
                 {% elif current_user.is_authenticated %}
                     <li class="nav-item">
-                        <span class="nav-link text-light">
+                        <a class="nav-link text-light" href="{{ url_for('vuln.profile', user_id=current_user.id) }}">
                             Welcome, <strong>{{ current_user.username }}</strong>
-                        </span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('auth.logout') }}">

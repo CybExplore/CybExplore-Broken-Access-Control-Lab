@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Post New Listing – CybExplore BAC Lab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Post a New Item for Sale</h4>
+            </div>
+            
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Fill in the details below. This form is intentionally vulnerable to certain A01 attacks — explore responsibly!
+                </p>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <!-- Hidden field for mass assignment vulnerability (owner_id tampering) -->
+                    <input type="hidden" name="owner_id" value="{{ current_user.id }}">
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-bold">Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required autofocus 
+                               placeholder="e.g. Used iPhone 12 128GB">
+                        <div class="form-text text-muted">Be descriptive — this is what buyers see first.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" 
+                                  placeholder="Condition, specs, reason for selling, etc..."></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="price" class="form-label fw-bold">Price (₦) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="price" name="price" step="0.01" min="1" required 
+                                   placeholder="1500.00">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="category" class="form-label fw-bold">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="textbooks">Textbooks / Study Materials</option>
+                                <option value="electronics">Electronics / Gadgets</option>
+                                <option value="fashion">Fashion / Clothes</option>
+                                <option value="hostel">Hostel / Dorm Items</option>
+                                <option value="gadgets">Small Gadgets / Accessories</option>
+                                <option value="beauty">Beauty / Personal Care</option>
+                                <option value="sports">Sports / Games</option>
+                                <option value="other" selected>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-4">
+                        <label for="photo" class="form-label fw-bold">Upload Photo (optional)</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                        <div class="form-text text-muted">jpg, png, gif — max 5MB recommended (no strict limit enforced)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="preview_url" class="form-label fw-bold">External Preview Image URL (optional)</label>
+                        <input type="url" class="form-control" id="preview_url" name="preview_url" 
+                               placeholder="https://example.com/product.jpg">
+                        <div class="form-text text-muted">
+                            Server will attempt to fetch this URL. Use with caution — this feature is vulnerable.
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('vuln.home') }}" class="btn btn-outline-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload me-1"></i> Post Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
